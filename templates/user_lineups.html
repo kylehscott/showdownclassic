@@ -1,0 +1,31 @@
+{% extends "header.html" %}
+
+{% block body %}
+
+<div class="uk-container uk-container-expand">
+    <div class="uk-child-width-1-1 uk-child-width-1-2@m uk-child-width-1-3@l uk-text-center" uk-grid>
+        {% for lineup in lineups %}
+        <div>
+            <div class="uk-card uk-card-default uk-card-body">
+                <h3 class="uk-card-title">{{ lineup.name }}</h3>
+                <div class="uk-flex uk-flex-row uk-child-width-1-5">
+                    {% for batter in lineup.batters.split(',')[0:9] %}
+                    {% set batter_pos = batter.strip().split(':')[1] %}
+                    {% set batter = batter.strip().split(':')[0] %}
+
+                    <div>
+                        <img uk-tooltip="title:'{{ batters.get(batter).card_year[2:] }} {{ batters.get(batter).name }} - {{ batter_pos }}; pos: bottom" data-src="/static/image/card_imgs/2018/1st/{{ batter }}.jpg" uk-img>
+                    </div>
+                    {% endfor %}
+                    {% set pitcher_id = lineup.pitchers.split(',')[0].strip() %}
+                    <div>
+                        <img uk-tooltip="title:'{{ pitchers.get(pitcher_id).card_year[2:] }} {{ pitchers.get(pitcher_id).name }} - P; pos: bottom" data-src="/static/image/card_imgs/2018/1st/{{ pitcher_id }}.jpg" uk-img>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

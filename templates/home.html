@@ -1,0 +1,32 @@
+{% extends "header.html" %}
+
+{% block body %}
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+          <div class="uk-alert-primary" uk-alert>
+              <a class="uk-alert-close" uk-close></a>
+              <p>{{ message }}</p>
+          </div>
+        {% endfor %}
+      {% endif %}
+{% endwith %}
+
+<div class="uk-container">
+        <ul class="uk-subnav uk-subnav-pill" uk-switcher>
+            <li><a href="#">Item</a></li>
+            <li><a href="#">Item</a></li>
+            <li><a href="#">Item</a></li>
+        </ul>
+        
+        <ul class="uk-switcher uk-margin">
+            <div class="uk-card uk-card-default uk-card-body">
+                Hello<br>Hello Afain
+            </div>
+            <li>Hello again!</li>
+            <li>Bazinga!</li>
+        </ul>
+</div>
+
+{% endblock %}

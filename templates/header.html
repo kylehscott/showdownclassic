@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<htm lang="en" style="height: 100%">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.4/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.4/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.4/js/uikit-icons.min.js"></script>
+    <link href="{{ url_for('static', filename='css/stylesheet.css') }}" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Oswald:400,300,700' rel='stylesheet' type='text/css'>
+    <title>Showdown Classic</title>
+    <div uk-sticky="animation: uk-animation-slide-top; sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky; cls-inactive: uk-navbar-transparent uk-light; top: 200">
+        <nav class="uk-navbar-container" uk-navbar>
+            <div class="uk-navbar-left">
+
+                <ul class="uk-navbar-nav">
+                    <li class="uk-icon-link"><a href="/" uk-icon="icon: home; ratio: 2"></a></li>
+                    {% if session['logged_in'] == True %}
+                    <li><a href="/quickgame/">Play</a></li>
+                    <li>
+                        <a href="#">Lineups</a>
+                        <div class="uk-navbar-dropdown uk-background-secondary">
+                            <ul class="uk-nav uk-navbar-dropdown-nav">
+                                <li><a href="/lineup/">My Lineups</a></li>
+                                <li><a href="/lineup/create/">Create Lineup</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li><a href="/cards/">Cards</a></li>
+
+                    {% endif %}
+                </ul>
+
+            </div>
+            <div class="uk-navbar-right">
+
+                <ul class="uk-navbar-nav">
+                    {% if session['logged_in'] != True %}
+                    <li><a href="/login/">Login</a></li>
+                    <li><a href="/register/">Register</a></li>
+                    {% endif %}
+                    {% if session['logged_in'] == True %}
+                    <li><a href="/logout/">Logout</a></li>
+                    {% endif %}
+                </ul>
+
+            </div>
+        </nav>
+    </div>
+  </head>
+  <body>
+
+        <br>
+        {% block body %}{% endblock %}
+        <br>
+
+  </body>
+</html>

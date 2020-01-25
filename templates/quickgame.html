@@ -1,0 +1,47 @@
+{% extends "header.html" %}
+
+{% block body %}
+<div class="uk-container">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <div class="uk-card uk-card-large uk-card-default uk-card-body">
+        <form action="/play">
+            <div class="uk-flex uk-flex-row uk-flex-center uk-width-1-1">
+                <div class="uk-width-1-2">
+                    <select class="uk-select uk-text-center" name="home" size="6" style="width: 100%;">
+                      {% for lineup in lineups %}
+                      <option class="uk-text-large uk-text-bold" value="{{ lineup.id }}">{{ lineup.name }}</option>
+                      {% endfor %}
+                    </select>
+                </div>
+                <div class="uk-width-1-2">
+                    <select class="uk-select uk-text-center" name="away" size="6" style="width: 100%;">
+                      {% for lineup in lineups %}
+                      <option class="uk-text-large uk-text-bold" value="{{ lineup.id }}">{{ lineup.name }}</option>
+                      {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <br>
+            <div class="uk-flex uk-flex-row uk-width-1-1">
+                <div class="uk-width-1-1 uk-text-center">
+                    <input class="uk-radio" type="radio" name="user" value="home" checked> Home
+                    <input class="uk-radio" type="radio" name="user" value="away"> Away
+                    <br>
+                    <br>
+                    <input class="uk-button uk-button-default" type="submit" value="Submit">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

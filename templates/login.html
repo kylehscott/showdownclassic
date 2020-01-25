@@ -1,0 +1,38 @@
+{% extends "header.html" %}
+
+{% block body %}
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+          <div class="uk-alert-primary" uk-alert>
+              <a class="uk-alert-close" uk-close></a>
+              <p>{{ message }}</p>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+  <div class="uk-container-large">
+      <div class="uk-flex uk-flex-center">
+          <div class="uk-card uk-card-secondary uk-card-body uk-width-1-1">
+            <h4 class="uk-card-title">Please Login:</h4>
+            <form class="form-inline" method="post" autocomplete="on">
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: user"></span>
+                        <input type="text" class="form-control uk-input" placeholder="Username" name="username" value="{{ request.form.username }}" autofocus>
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <div class="uk-inline">
+                        <span class="uk-form-icon uk-form-icon-flip" uk-icon="icon: lock"></span>
+                        <input type="password" class="form-control uk-input" placeholder="Password" name="password" value="{{ request.form.password }}">
+                    </div>
+                </div>
+                <input class="uk-button uk-button-secondary" type="submit" value="Login">
+            </form>
+        </div>
+    </div>
+  </div>
+{% endblock %}

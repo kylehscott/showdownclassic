@@ -1,0 +1,486 @@
+{% extends "header.html" %}
+
+{% block body %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+
+$(document).ready(function(){
+    var benchNumber = 4;
+    var bullpenNumber = 4;
+    var batters = "john";
+    var pitchers = [];
+    var selectedPosition = ""
+        UIkit.util.on('#js-modal-dialog', 'click', function (e) {
+           e.preventDefault();
+           e.target.blur();
+           UIkit.modal.dialog('<p class="uk-modal-body">UIkit dialog!</p>');
+       });
+
+    $(document).on("click",".uk-card", function(){
+    //$(".uk-card").on("mousedown", function(){
+    //$(".uk-card").click(function() {
+        selectedDiv = $(this).find('span').attr('id');
+        if (selectedDiv != undefined) {
+          selectedPosition = selectedDiv.split("-")[0];
+        }
+        console.log(selectedDiv);
+    });
+
+    $(document).on("click",".copy-lineup", function(){
+    //$(".copy-lineup").click(function() {
+        batters = [];
+        dhSpan = $("#dh-spot").html();
+        $("#batters").html($("#batters-no-dh").html());
+        startingList = $("#batters").find("span[id$='name']").parent().parent()
+        for (i = 0; i < startingList.length; i++) {
+            children = startingList[i].children[0].children
+            for (x = 0; x < children.length; x++) {
+                idName = $(children[x]).attr('id');
+                newID = idName.replace("nodh", "");
+                $(children[x]).attr('id', newID);
+            }
+        }
+        copyButton = $("#batters").find("#copy-button");
+        copyButton.removeClass("copy-lineup").addClass("copy-lineup-nodh");
+        copyButton.text("Copy to Lineup (No DH)");
+        $("#pitchers-spot").html(dhSpan);
+        $("#pitchers-spot").attr("id", "dh-spot");
+        $("#dh-spot").attr("uk-toggle", "target: #designatedhitter-modal");
+        $("#designatedhitter-id").text($("#benchnodh0-id").text());
+        $("#designatedhitter-name").text($("#benchnodh0-name").text());
+        $("#benchnodh0").remove();
+        UIkit.notification("Lineup Copied!", {status:'success'}, {timeout: 1000});
+    });
+
+    $(document).on("click",".copy-lineup-nodh", function(){
+    //$(".copy-lineup-nodh").click(function() {
+        pitchersSpot = $("#pitchers-spot").html();
+        $("#batters-no-dh").html($("#batters").html());
+        startingList = $("#batters-no-dh").find("span[id$='name']").parent().parent()
+        for (i = 0; i < startingList.length; i++) {
+            children = startingList[i].children[0].children
+            for (x = 0; x < children.length; x++) {
+                idName = $(children[x]).attr('id');
+                newID = idName.replace("-", "nodh-");
+                $(children[x]).attr('id', newID);
+            }
+        }
+        copyButton = $("#batters-no-dh").find("#copy-button");
+        copyButton.removeClass("copy-lineup-nodh").addClass("copy-lineup");
+        copyButton.text("Copy to Lineup (DH)");
+        bench0 = '<li id="benchnodh0" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">\
+                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="benchnodh0-id" hidden></span><span id="benchnodh0-name">(Select Player)</span> - <span id="benchnodh0-position">B</span></div>\
+                 </li>'
+        $("#batters-no-dh").find("#bench-list").prepend(bench0)
+        $("#benchnodh0-id").text($("#designatedhitter-id").text());
+        $("#benchnodh0-name").text($("#designatedhitter-name").text());
+        $("#batters-no-dh").find("#bench1").attr("id", "benchnodh1");
+        $("#batters-no-dh").find("#bench2").attr("id", "benchnodh2");
+        $("#batters-no-dh").find("#bench3").attr("id", "benchnodh3");
+        $("#batters-no-dh").find("#dh-spot").attr("id", "pitchers-spot");
+        $("#pitchers-spot").html(pitchersSpot);
+        $("#pitchers-spot").removeAttr("uk-toggle");
+        UIkit.notification("Lineup Copied!", {status:'success'}, {timeout: 1000});
+    });
+
+    $(".select-card").click(function() {
+        playerID = $(this).find(".player-id").text();
+        playerName = $(this).find(".player-name").text();
+        playerPosition = $(this).find(".player-position").text();
+        position = $(this).attr('id');
+        if (position == "rightfield") {
+            positionShort = "LF"
+        } else {
+            positionShort = $("." + selectedPosition + "-position").text();
+        }
+        $("#" + selectedPosition + "-id").text(playerID)
+        $("#" + selectedPosition + "-name").text(playerName);
+        if (selectedPosition.substring(0, 5) == "bench") {
+            $("#" + selectedPosition + "-position").text(playerPosition);
+        } else if (positionShort == "1B" && playerPosition == "---") {
+            $("#" + selectedPosition + "-position-value").text("-2");
+        } else {
+            if (playerPosition.split(',').length > 1) {
+                for (i = 0; i < playerPosition.split(',').length; i++) {
+                    tempPosition = playerPosition.split(',')[i].replace(/\s+/g, '')
+                    if (tempPosition.substring(0, positionShort.length) == positionShort) {
+                        $("#" + selectedPosition + "-position-value").text("+" + tempPosition.split("+")[1]);
+                    }
+                }
+            } else {
+                $("#" + selectedPosition + "-position-value").text("+" + playerPosition.split("+")[1]);
+            }
+        }
+        UIkit.modal("#" + position + "-modal").hide();
+    });
+
+    $(document).on('added', '.uk-sortable', function(e) {
+        var origDiv = e.originalEvent.detail[1]
+        var newHtml = $(origDiv)
+        var originalID = newHtml.attr('id')
+        if (originalID.substring(0, 5) == "bench") {
+            newHtml.find('div').text('(Select Player) - RP');
+            newHtml.attr('id', 'bullpen' + String(bullpenNumber));
+            newHtml.attr('uk-toggle', 'target: #reliever-modal')
+            bullpenNumber += 1;
+        } else if (originalID.substring(0, 7) == "bullpen") {
+            newHtml.find('div').html('<span id="bench'+ String(benchNumber) + '-id" hidden></span><span id="bench' + String(benchNumber) + '-name">(Select Player)</span> - <span id="bench' + String(benchNumber) + '-position">B</span>');
+            newHtml.attr('id', 'bench' + String(benchNumber));
+            benchNumber += 1;
+        }
+    });
+
+    $("#post-button").click(function() {
+        batters = [];
+        battersNoDH = [];
+        pitchers = [];
+        teamAbbr = $("#team-abbr").val().toUpperCase();
+        teamName = $("#team-name").val();
+
+        startingList = $("#batters").find("span[id$='id']")
+        for (i = 0; i < startingList.length; i++) {
+            batterID = $(startingList[i]).text()
+            if (i > 8) {
+                batterPos = "B"
+            } else {
+                batterPos = $(startingList[i]).parent().find("span[id$='position']").text()
+            }
+            batters.push(batterID + ":" + batterPos);
+        }
+        startingListNoDH = $("#batters-no-dh").find("span[id$='id']")
+        for (i = 0; i < startingListNoDH.length; i++) {
+            batterID = $(startingListNoDH[i]).text()
+            if (i > 8) {
+                batterPos = "B"
+            } else {
+                batterPos = $(startingListNoDH[i]).parent().find("span[id$='position']").text()
+            }
+            battersNoDH.push(batterID + ":" + batterPos);
+        }
+        pitchersList = $("#pitchers").find("span[id$='id']")
+        for (i = 0; i < pitchersList.length; i++) {
+            pitchers.push($(pitchersList[i]).text());
+        }
+        lineup = [batters, pitchers, teamAbbr, teamName, battersNoDH];
+        console.log(lineup);
+        $.ajax({
+            url: '/lineup/save/',
+            data: JSON.stringify( lineup ),
+            contentType: 'application/json',
+            type: 'POST',
+            success: function(data) {
+                location.reload(true);
+            }
+        });
+
+    })
+
+
+});
+</script>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="uk-container">
+        <div uk-grid>
+            <div id="team-info" class="uk-width-1-1">
+                <div class="uk-margin-remove uk-card uk-card-small uk-card-secondary uk-card-body" uk-grid>
+                    <div class="uk-width-1-5@s uk-width-2-5">
+                        <input id="team-abbr" class="uk-input" type="text" placeholder="ABR" maxlength="3" style="text-transform:uppercase;">
+                    </div>
+                    <div class="uk-width-3-5">
+                        <input id="team-name" class="uk-input" type="text" placeholder="Team Name">
+                    </div>
+                    <div class="uk-width-1-1 uk-width-1-5@s">
+                        <button class="uk-button uk-button-secondary" id="post-button">Save Lineup</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="uk-width-1-1">
+                <ul class="uk-subnav uk-subnav-pill uk-flex uk-flex-center" uk-switcher>
+                    <li><a href="#">Lineup (DH)</a></li>
+                    <li><a href="#">Lineup (No DH)</a></li>
+                    <li><a href="#">Pitchers</a></li>
+                </ul>
+
+
+                <ul class="uk-switcher">
+                    <div id="batters" class="uk-column-1-1  uk-column-1-2@m">
+                        <div class="uk-flex uk-flex-inline uk-flex-column">
+                            <ul id="starting-lineup" class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: starting-lineup" uk-grid>
+                                <li class="uk-margin-remove" uk-toggle="target: #catcher-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="catcher-id" hidden></span><span id="catcher-name">(Select Player)</span> - <span id="catcher-position">C</span><span id="catcher-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #firstbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="firstbase-id" hidden></span><span id="firstbase-name">(Select Player)</span> - <span id="firstbase-position">1B</span><span id="firstbase-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #secondbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body "><span id="secondbase-id" hidden></span><span id="secondbase-name">(Select Player)</span> - <span id="secondbase-position">2B</span><span id="secondbase-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #thirdbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="thirdbase-id" hidden></span><span id="thirdbase-name">(Select Player)</span> - <span id="thirdbase-position">3B</span><span id="thirdbase-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #shortstop-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="shortstop-id" hidden></span><span id="shortstop-name">(Select Player)</span> - <span id="shortstop-position">SS</span><span id="shortstop-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #leftfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="leftfield-id" hidden></span><span id="leftfield-name">(Select Player)</span> - <span id="leftfield-position">LF</span><span id="leftfield-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #centerfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="centerfield-id" hidden></span><span id="centerfield-name">(Select Player)</span> - <span id="centerfield-position">CF</span><span id="centerfield-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #rightfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="rightfield-id" hidden></span><span id="rightfield-name">(Select Player)</span> - <span id="rightfield-position">RF</span><span id="rightfield-position-value"></span></div>
+                                </li>
+                                <li id="dh-spot" class="uk-margin-remove player-select" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="designatedhitter-id" hidden></span><span id="designatedhitter-name">(Select Player)</span> - <span id="designatedhitter-position">DH</span></div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="uk-flex uk-flex-column">
+                            <ul id="bench-list" class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: bullpen" uk-grid>
+                                <li id="bench1" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="bench1-id" hidden></span><span id="bench1-name">(Select Player)</span> - <span id="bench1-position">B</span></div>
+                                </li>
+                                <li id="bench2" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="bench2-id" hidden></span><span id="bench2-name">(Select Player)</span> - <span id="bench2-position">B</span></div>
+                                </li>
+                                <li id="bench3" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="bench3-id" hidden></span><span id="bench3-name">(Select Player)</span> - <span id="bench3-position">B</span></div>
+                                </li>
+                            </ul>
+                            <ul class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-grid>
+                                <li class="uk-margin-remove">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><a class="">Add Bench Player</a><br><a id="copy-button" class="copy-lineup-nodh">Copy to Lineup (No DH)</a></div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="batters-no-dh" class="uk-column-1-1  uk-column-1-2@m">
+                        <div class="uk-flex uk-flex-inline uk-flex-column">
+                            <ul id="starting-lineup" class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: starting-lineup" uk-grid>
+                                <li class="uk-margin-remove" uk-toggle="target: #catcher-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="catchernodh-id" hidden></span><span id="catchernodh-name">(Select Player)</span> - <span id="catchernodh-position">C</span><span id="catchernodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #firstbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="firstbasenodh-id" hidden></span><span id="firstbasenodh-name">(Select Player)</span> - <span id="firstbasenodh-position">1B</span><span id="firstbasenodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #secondbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body "><span id="secondbasenodh-id" hidden></span><span id="secondbasenodh-name">(Select Player)</span> - <span id="secondbasenodh-position">2B</span><span id="secondbasenodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #thirdbase-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="thirdbasenodh-id" hidden></span><span id="thirdbasenodh-name">(Select Player)</span> - <span id="thirdbasenodh-position">3B</span><span id="thirdbasenodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #shortstop-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="shortstopnodh-id" hidden></span><span id="shortstopnodh-name">(Select Player)</span> - <span id="shortstopnodh-position">SS</span><span id="shortstopnodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #leftfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="leftfieldnodh-id" hidden></span><span id="leftfieldnodh-name">(Select Player)</span> - <span id="leftfieldnodh-position">LF</span><span id="leftfieldnodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #centerfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="centerfieldnodh-id" hidden></span><span id="centerfieldnodh-name">(Select Player)</span> - <span id="centerfieldnodh-position">CF</span><span id="centerfieldnodh-position-value"></span></div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #rightfield-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="rightfieldnodh-id" hidden></span><span id="rightfieldnodh-name">(Select Player)</span> - <span id="rightfieldnodh-position">RF</span><span id="rightfieldnodh-position-value"></span></div>
+                                </li>
+                                <li id="pitchers-spot" class="uk-margin-remove">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="pitcher-id" hidden></span>Pitcher's Spot</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="uk-flex uk-flex-column">
+                            <ul id="bench-list" class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: bullpen" uk-grid>
+                                <li id="benchnodh0" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="benchnodh0-id" hidden></span><span id="benchnodh0-name">(Select Player)</span> - <span id="benchnodh0-position">B</span></div>
+                                </li>
+                                <li id="benchnodh1" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="benchnodh1-id" hidden></span><span id="benchnodh1-name">(Select Player)</span> - <span id="benchnodh1-position">B</span></div>
+                                </li>
+                                <li id="benchnodh2" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="benchnodh2-id" hidden></span><span id="benchnodh2-name">(Select Player)</span> - <span id="benchnodh2-position">B</span></div>
+                                </li>
+                                <li id="benchnodh3" class="uk-margin-remove" uk-toggle="target: #designatedhitter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="benchnodh3-id" hidden></span><span id="benchnodh3-name">(Select Player)</span> - <span id="benchnodh3-position">B</span></div>
+                                </li>
+                            </ul>
+                            <ul class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-grid>
+                                <li class="uk-margin-remove">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><a class="">Add Bench Player</a><br><a id="copy-button" class="copy-lineup">Copy to Lineup (DH)</a></div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="pitchers" class="uk-column-1-1 uk-column-1-2@m">
+                        <div class="uk-flex uk-flex-column">
+                            <ul class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: starting-rotation" uk-grid>
+                                <li class="uk-margin-remove" uk-toggle="target: #starter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="starter1-id" hidden></span><span id="starter1-name">(Select Player)</span> - SP</div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #starter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="starter2-id" hidden></span><span id="starter2-name">(Select Player)</span> - SP</div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #starter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="starter3-id" hidden></span><span id="starter3-name">(Select Player)</span> - SP</div>
+                                </li>
+                                <li class="uk-margin-remove" uk-toggle="target: #starter-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="starter4-id" hidden></span><span id="starter4-name">(Select Player)</span> - SP</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="uk-flex uk-flex-inline uk-flex-column">
+                            <ul id="bullpen-list" class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-sortable="group: bullpen" uk-grid>
+                                <li id="bullpen1" class="uk-margin-remove" uk-toggle="target: #reliever-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="reliever1-id" hidden></span><span id="reliever1-name">(Select Player)</span> - RP</div>
+                                </li>
+                                <li id="bullpen2" class="uk-margin-remove" uk-toggle="target: #reliever-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="reliever2-id" hidden></span><span id="reliever2-name">(Select Player)</span> - RP</div>
+                                </li>
+                                <li id="bullpen3" class="uk-margin-remove" uk-toggle="target: #reliever-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="reliever3-id" hidden></span><span id="reliever3-name">(Select Player)</span> - RP</div>
+                                </li>
+                            </ul>
+                            <ul class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-grid>
+                                <li class="uk-margin-remove" uk-toggle="target: #reliever-modal">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body"><span id="closer-id" hidden></span><span id="closer-name">(Select Player)</span> - CP</div>
+                                </li>
+                            </ul>
+                            <ul class="uk-grid-small uk-child-width-1-1 uk-text-center" uk-grid>
+                                <li class="uk-margin-remove">
+                                    <div class="uk-card uk-card-small uk-card-hover uk-card-secondary uk-card-body">Add Relief Pitcher</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+
+    {% set cards = [catcher, firstbase, secondbase, thirdbase, shortstop, leftfield, centerfield, rightfield, cards] %}
+
+    {% for position in ["catcher", "firstbase", "secondbase", "thirdbase", "shortstop", "leftfield", "centerfield", "rightfield", "designatedhitter"] %}
+    <!--  {{ position }} modal -->
+    <div id="{{ position }}-modal" class="uk-modal-container" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+            <h2 class="uk-modal-title">{{ position }}</h2>
+            <table class="uk-table uk-table-divider uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Team</th>
+                        <th>Points</th>
+                        <th>OB</th>
+                        <th>Speed</th>
+                        <th>Pos</th>
+                        <th>B</th>
+                        <th>SO</th>
+                        <th>GB</th>
+                        <th>FB</th>
+                        <th>BB</th>
+                        <th>1B</th>
+                        <th>1B+</th>
+                        <th>2B</th>
+                        <th>3B</th>
+                        <th>HR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards[loop.index0] %}
+                    <tr id="{{ position }}" class="select-card">
+                        <td class="player-id" hidden>{{ card.id }}</td>
+                        <td class="player-name">{{ card.name }}</td>
+                        <td>{{ card.team }}</td>
+                        <td>{{ card.points }}</td>
+                        <td class="player-onbase">{{ card.ob_c }}</td>
+                        <td>{{ card.speed_ip }}</td>
+                        <td class="player-position">{{ card.pos }}</td>
+                        <td>{{ card.hand }}</td>
+                        <td>{{ card.so }}</td>
+                        <td>{{ card.gb }}</td>
+                        <td>{{ card.fb }}</td>
+                        <td>{{ card.w }}</td>
+                        <td>{{ card.s }}</td>
+                        <td>{{ card.s_plus }}</td>
+                        <td>{{ card.double }}</td>
+                        <td>{{ card.tr }}</td>
+                        <td>{{ card.hr }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+
+    {% set pitchers = [starter, reliever, closer] %}
+
+    {% for position in ["starter", "reliever", "closer"] %}
+
+    <!-- {{ position }} modal -->
+    <div id="{{ position }}-modal" class="uk-modal-container" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+            <h2 class="uk-modal-title">{{ position }}</h2>
+            <table class="uk-table uk-table-divider uk-table-small">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Team</th>
+                        <th>Points</th>
+                        <th>C</th>
+                        <th>IP</th>
+                        <th>Pos</th>
+                        <th>T</th>
+                        <th>PU</th>
+                        <th>SO</th>
+                        <th>GB</th>
+                        <th>FB</th>
+                        <th>BB</th>
+                        <th>1B</th>
+                        <th>2B</th>
+                        <th>HR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in pitchers[loop.index0] %}
+                    <tr id="{{ position }}" class="select-card">
+                        <td class="player-id" hidden>{{ card.id }}</td>
+                        <td class="player-name">{{ card.name }}</td>
+                        <td>{{ card.team }}</td>
+                        <td>{{ card.points }}</td>
+                        <td class="player-control">{{ card.ob_c }}</td>
+                        <td class="player-inningspitched">{{ card.speed_ip }}</td>
+                        <td>{{ card.pos }}</td>
+                        <td>{{ card.hand }}</td>
+                        <td>{{ card.pu }}</td>
+                        <td>{{ card.so }}</td>
+                        <td>{{ card.gb }}</td>
+                        <td>{{ card.fb }}</td>
+                        <td>{{ card.w }}</td>
+                        <td>{{ card.s }}</td>
+                        <td>{{ card.double }}</td>
+                        <td>{{ card.hr }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+
+
+{% endblock %}

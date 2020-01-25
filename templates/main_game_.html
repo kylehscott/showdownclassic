@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.5/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.5/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.5/js/uikit-icons.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0-beta.3/slate/bootstrap.min.css">
+    <link href="{{ url_for('static', filename='css/stylesheet.css') }}" rel="stylesheet">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+    <title>Baseball Showdown</title>
+    <link href='http://fonts.googleapis.com/css?family=Oswald:400,300,700' rel='stylesheet' type='text/css'>
+    </head>
+    <body style="background: url('{{ url_for('static', filename='image/background.png') }}'); background-size: 100%;">
+
+        <br>
+        <div class="uk-container uk-container-large">
+            <div class="uk-width-1-1 uk-overflow-auto">
+                <table id="innings" class="uk-table uk-table-small uk-table-divider uk-table-middle uk-background-secondary uk-text-nowrap" style="font-size: 15px;">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>1</th>
+                            <th>2</th>
+                            <th>3</th>
+                            <th>4</th>
+                            <th>5</th>
+                            <th>6</th>
+                            <th>7</th>
+                            <th>8</th>
+                            <th id="inning-9">9</th>
+                            <th>R</th>
+                            <th>H</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>{{ away_team_name }}</th>
+                            {% for i in range(9) %}
+                            <td id="away-runs-{{ i + 1 }}">&nbsp;</td>
+                            {% endfor %}
+                            <td class="away-runs">0</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <th>{{ home_team_name }}</th>
+                            {% for i in range(9) %}
+                            <td id="home-runs-{{ i + 1 }}">&nbsp;</td>
+                            {% endfor %}
+                            <td class="home-runs">0</td>
+                            <td>0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <br>
+            <div class="uk-flex uk-flex-center" uk-grid>
+
+                <!-- Away Lineup -->
+                <div class="uk-flex-last uk-flex-first@m uk-width-1-5@m uk-width-1-2@s uk-width-1-1">
+                    <table class="uk-table uk-background-secondary uk-table-divider uk-text-nowrap" style="font-size: 15px;">
+                        <tbody>
+                            {% for player in away_lineup[:9] %}
+                            {% set player_pos = away_defense[loop.index - 1] %}
+                            <tr id="away-batter-{{ loop.index }}">
+                                <th>{{ loop.index }}</th>
+                                <td>{{ player.name }}</td>
+                                <td>{{ player_pos }}{% if player_pos != "P" %} +<span id="home-{{ player_pos }}-value">{% if player.pos.split(",")|length == 1 %}{{ player.pos.split("+")[1] }}{% else %}{% for i in player.pos.split(",") %}{% if player_pos in i.split("+")[0] %}{{ i.split("+")[1] }}{% endif %}{% endfor %}{% endif %}{% endif %}</span></td>
+                            </tr>
+                            {% endfor %}
+                            <caption>
+                                <div class="uk-flex">
+                                    <div class="uk-width-1-2 uk-width-expand">
+                                        <button class="uk-button uk-button-secondary" data-toggle="modal" data-target="#awayBullpenModal" style="width:100%;">Bullpen</button>
+                                    </div>
+                                    <div class="uk-width-1-2 uk-width-expand">
+                                        <button class="uk-button uk-button-secondary" data-toggle="modal" data-target="#awayBenchModal" style="width:100%;">Bench</button>
+                                    </div>
+                                </div>
+                            </caption>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- Playing card field -->
+                <div class="uk-width-3-5@m uk-width-1-1">
+                    <div class="uk-flex uk-flex-row uk-flex-center">
+                        <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
+                            <div class="flipper">
+                                <div id="second-base" class="front uk-card uk-background-secondary base-popover" data-toggle="popover" data-placement="right" style="font-size: 10px;">
+                                  <img id="second-base-img" class="" src="/static/image/card_imgs/_base.jpg" alt="Card image cap">
+                                  <span id="second-base-name"><br></span>
+                                  <span id="second-base-speed"><br></span>
+                                </div>
+                                <div class="back uk-card uk-background-secondary">
+                                    Goodbye
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <div class="uk-flex uk-flex-row uk-flex-around">
+                        <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
+                            <div class="flipper">
+                                <div id="third-base" class="front uk-card uk-background-secondary" style="font-size: 10px;">
+                                  <img id="third-base-img" class="" src="/static/image/card_imgs/_base.jpg" alt="Card image cap">
+                                  <span id="third-base-name"><br></span>
+                                  <span id="third-base-speed"><br></span>
+                                </div>
+                                <div class="back uk-card uk-background-secondary">
+                                    Test
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
+                            <div class="flipper">
+                                <div id="pitcher" class="front uk-card uk-background-secondary" style="font-size: 13px;">
+                                    <img id="pitcher-img" class="" src="/static/image/card_imgs/_base.jpg" alt="Card image cap" style="">
+                                    <small id="pitcher-name">Curt Schilling</small>
+                                    <small id="pitcher-con">Con: 9</small>
+                                </div>
+                                <div class="back uk-card uk-background-secondary">
+                                    <small>
+                                      <span>IP:  <span id="pitcher-ip">-</span></span>
+                                      <br>
+                                      <span>PU:  <span id="pitcher-pu">-</span></span>
+                                      <br>
+                                      <span>SO:  <span id="pitcher-so">-</span></span>
+                                      <br>
+                                      <span>GB:  <span id="pitcher-gb">-</span></span>
+                                      <br>
+                                      <span>FB:  <span id="pitcher-fb">-</span></span>
+                                      <br>
+                                      <span>BB:  <span id="pitcher-bb">-</span></span>
+                                      <br>
+                                      <span>1B:  <span id="pitcher-1b">-</span></span>
+                                      <br>
+                                      <span>2B:  <span id="pitcher-2b">-</span></span>
+                                      <br>
+                                      <span>HR:  <span id="pitcher-hr">-</span></span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
+                            <div class="flipper">
+                                <div id="first-base" class="front uk-card uk-background-secondary base-popover" data-toggle="popover" data-placement="top" style="font-size: 10px;">
+                                  <img id="first-base-img" class="" src="/static/image/card_imgs/_base.jpg" alt="Card image cap">
+                                  <span id="first-base-name"><br></span>
+                                  <span id="first-base-speed"><br></span>
+                                </div>
+                                <div class="back uk-card uk-background-secondary">
+                                    First Base
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br>
+                    <div class="uk-flex uk-flex-row uk-flex-center">
+                        <div class="uk-flex uk-flex-column uk-width-2-5 uk-padding">
+                            <button id="roll-button" class="uk-button uk-button-secondary" type="button" class="uk-button uk-button-secondary">Roll</button>
+                            <button id="var-button" class="uk-button uk-button-secondary" type="button" class="uk-button uk-button-secondary">{% if user_team == "away" %}Bunt{% else %}IBB{% endif %}</button>
+                        </div>
+                        <br>
+                        <div class="flip-container uk-width-1-5" ontouchstart="this.classList.toggle('hover');">
+                            <div class="flipper">
+                                <div id="batter" class="front uk-card uk-background-secondary" style="font-size: 13px;">
+                                    <img class="batters-img" src="/static/image/card_imgs/_base.jpg">
+                                    <div class="uk-overlay uk-position-top-right uk-padding-remove-top uk-padding-remove-right uk-text-right">
+                                        <small class="batter-ob uk-label uk-background-secondary" style="font-size: 10px"><br></small><br>
+                                        <small class="uk-label uk-background-secondary uk-visible@m" style="font-size: 8px;">SPD: <span class="batter-speed"></span></small>
+                                    </div>
+                                    <div class="uk-overlay uk-overlay-primary uk-position-bottom uk-padding-small">
+                                        <div class="uk-flex-nowrap"><span id="batter-name"><br></span><span class="uk-visible@m" id="batter-pos"> - </span><br></div>
+                                        <span class="uk-visible@m" style="font-size: 10px; font-style: italic;"><span id="batter-year"><br></span> <span id="batter-team" class="" ><br></span></span>
+                                    </div>
+                                </div>
+                                <div class="back uk-card uk-background-secondary">
+                                    <img class="batters-img uk-overlay-primary" src="/static/image/card_imgs/_base.jpg" style="opacity: 0.3; filter: blur(5px);">
+                                    <div class="uk-overlay uk-position-left uk-text-top uk-text-left uk-padding-small">
+                                        <span class="batter-ob"><br></span><br>
+                                        <button>Sub</button>
+                                    </div>
+                                    <div class="uk-overlay uk-position-center-right uk-padding-small" style="font-size: 9px;">
+                                        <small>
+                                          <span>SO:  <span id="batter-so">-</span></span>
+                                          <br>
+                                          <span>GB:  <span id="batter-gb">-</span></span>
+                                          <br>
+                                          <span>FB:  <span id="batter-fb">-</span></span>
+                                          <br>
+                                          <span>BB:  <span id="batter-bb">-</span></span>
+                                          <br>
+                                          <span>1B:  <span id="batter-1b">-</span></span>
+                                          <br>
+                                          <span>1B+:  <span id="batter-1b-plus">-</span></span>
+                                          <br>
+                                          <span>2B:  <span id="batter-2b">-</span></span>
+                                          <br>
+                                          <span>3B:  <span id="batter-3b">-</span></span>
+                                          <br>
+                                          <span>HR:  <span id="batter-hr">-</span></span>
+
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="uk-width-1-5"></div>
+                        <div class="uk-width-1-5">
+                            <table class="uk-table uk-table-divider uk-table-small uk-background-secondary">
+                                <thead>
+                                    <tr class="uk-flex uk-flex-wrap">
+                                        <th id="inning" class="uk-width-1-2">1 <i class="fas fa-caret-up"></i></th>
+                                        <th id="outs" class="uk-width-1-2"><i class="far fa-circle"></i> <i class="far fa-circle"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>{{ away_team_abr }}</th>
+                                        <th class="away-runs">0</th>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ home_team_abr }}</th>
+                                        <th class="home-runs">0</th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="uk-flex uk-flex-row uk-flex-center">
+                        <div class="uk-flex-last uk-width-1-1 uk-height-1-1">
+                            <br>
+                            <p id="test-box" class="uk-background-secondary uk-overflow-auto uk-resize-vertical" style="height: 100px; font-size: 12px; padding-left: 1%"></p>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+
+                <!-- Home Lineup -->
+                <div class="uk-width-1-5@m uk-width-1-2@s uk-width-1-1 uk-flex-last@m">
+                    <table class="uk-table uk-background-secondary uk-table-divider uk-text-nowrap" style="font-size: 15px;">
+                        <tbody>
+                            {% for player in home_lineup[:9] %}
+                            {% set player_pos = home_defense[loop.index - 1] %}
+                            <tr id="home-batter-{{ loop.index }}">
+                                <th>{{ loop.index }}</th>
+                                <td>{{ player.name }}</td>
+                                <td>{{ player_pos }}{% if player_pos != "P" %} +<span id="home-{{ player_pos }}-value">{% if player.pos.split(",")|length == 1 %}{{ player.pos.split("+")[1] }}{% else %}{% for i in player.pos.split(",") %}{% if player_pos in i.split("+")[0] %}{{ i.split("+")[1] }}{% endif %}{% endfor %}{% endif %}{% endif %}</span>
+                            </tr>
+                            {% endfor %}
+                            <caption>
+                                <div class="uk-flex">
+                                    <div class="uk-width-1-2 uk-width-expand">
+                                        <button class="uk-button uk-button-secondary" data-toggle="modal" data-target="#homeBullpenModal" style="width:100%;">Bullpen</button>
+                                    </div>
+                                    <div class="uk-width-1-2 uk-width-expand">
+                                        <button class="uk-button uk-button-secondary" data-toggle="modal" data-target="#homeBenchModal" style="width:100%;">Bench</button>
+                                    </div>
+                                </div>
+                            </caption>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+
+
+      <!-- Winning Modal -->
+      <div class="modal fade" id="winning-modal" tabindex="-1" role="dialog" aria-labelledby="winning-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+              <h5 class="modal-title">Congrats you won!</h5>
+            </div>
+            <div class="modal-body">
+              Get the champagne ready!!
+            </div>
+            <div class="modal-footer">
+              <a href="/" class="btn btn-primary">Play Again</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Losing Modal -->
+      <div class="modal fade" id="losing-modal" tabindex="-1" role="dialog" aria-labelledby="losing-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+              <h5 class="modal-title">You lost :(</h5>
+            </div>
+            <div class="modal-body">
+              I don't know what to tell you...
+            </div>
+            <div class="modal-footer">
+              <a href="/" class="btn btn-primary">Play Again</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!-- Away Bullpen Modal -->
+        <div class="modal fade text-white" id="awayBullpenModal" tabindex="-1" role="dialog" aria-labelledby="awayBullpenModal" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">New York Yankees Bullpen</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="container-fluid">
+                  <div id="away-bullpen" class="row justify-content-center">
+                      {% for player in away_rotation[1:] %}
+                      <div class="col-3">
+                        <div class="card bg-dark text-white text-center" style="font-size: 14px;">
+                          <img class="card-img" src="/static/image/card_imgs/{{ player.card_year }}/{{ player.card_set }}/{{ player.card_no }}.jpg">
+                          <small>{{ player.name }}</small>
+                          {% if user_team == "away" %}<small><button id="away-pitcher-{{ loop.index }}" class="btn btn-sm btn-primary replace-pitcher" style="font-size: 10px;" disabled>Put In Game</button></small>{% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Away Bench Modal -->
+        <div class="modal fade text-white" id="awayBenchModal" tabindex="-1" role="dialog" aria-labelledby="awayBullpenModal" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">New York Yankees Bench</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="container-fluid">
+                  <div class="row justify-content-center">
+                      {% for player in away_lineup[9:] %}
+                      <div class="col-3">
+                        <div class="card bg-dark text-white text-center" style="font-size: 14px;">
+                          <img class="card-img" src="/static/image/card_imgs/{{ player.card_year }}/{{ player.card_set }}/{{ player.card_no }}.jpg">
+                          <small>{{ player.name }}</small>
+                          <small>OB: {{ player.ob_c }}</small>
+                          {% if user_team == "away" %}<small><button id="away-bench-{{ loop.index0 + 9 }}" class="btn btn-sm btn-primary replace-batter" style="font-size: 10px;">Pinch Hit</button></small>{% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Home Bullpen Modal -->
+        <div class="modal fade text-white" id="homeBullpenModal" tabindex="-1" role="dialog" aria-labelledby="awayBullpenModal" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Arizona Diamondbacks Bullpen</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="container-fluid">
+                  <div id="home-bullpen" class="row justify-content-center">
+                      {% for player in home_rotation[1:] %}
+                      <div id="parent-test-1" class="col-3">
+                        <div id="parent-test-2" class="card bg-dark text-white text-center" style="font-size: 14px;">
+                          <img id="parent-test-3" class="card-img" src="/static/image/card_imgs/{{ player.card_year }}/{{ player.card_set }}/{{ player.card_no }}.jpg">
+                          <small id="parent-test-4">{{ player.name }}</small>
+                          {% if user_team == "home" %}<small><button id="home-pitcher-{{ loop.index }}" class="btn btn-sm btn-primary replace-pitcher" style="font-size: 10px;">Put In Game</button></small>{% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Home Bench Modal -->
+        <div class="modal fade text-white" id="homeBenchModal" tabindex="-1" role="dialog" aria-labelledby="awayBullpenModal" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Arizona Diamondbacks Bench</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="container-fluid">
+                  <div class="row justify-content-center">
+                      {% for player in home_lineup[9:] %}
+                      <div class="col-3">
+                        <div class="card bg-dark text-white text-center" style="font-size: 14px;">
+                          <img class="card-img" src="/static/image/card_imgs/{{ player.card_year }}/{{ player.card_set }}/{{ player.card_no }}.jpg">
+                          <small>{{ player.name }}</small>
+                          <small>OB: {{ player.ob_c }}</small>
+                          {% if user_team == "home" %}<small><button id="away-bench-{{ loop.index0 + 9 }}" class="btn btn-sm btn-primary replace-batter" style="font-size: 10px;" disabled>Pinch Hit</button></small>{% endif %}
+                        </div>
+                      </div>
+                      {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.js') }}"></script>
+
+        <!--<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+        <script type="text/javascript">
+
+          var userTeam = "{{ user_team }}";
+          {% set ns = namespace(away_pitchers_spot="null", home_pitchers_spot="null") %}
+          var awayTeamData = {
+            teamName: "New York Yankees",
+            lineup:[
+              {% for player in away_lineup %}{% if player.pos == "Starter" %}{% set ns.away_pitchers_spot = loop.index0 %}{% endif %}
+              {
+                id: "{{ player.id }}",
+                cardYear: "{{ player.card_year }}",
+                cardNo: "{{ player.card_no }}",
+                cardSet: "{{ player.card_set }}",
+                name: "{{ player.name }}",
+                team: "{{ player.team }}",
+                onBase: {{ player.ob_c }},
+                speed: {{ player.speed_ip }},
+                pos: "{{ player.pos }}",
+                hand: "{{ player.hand }}",
+                popUp: "{{ player.pu }}",
+                strikeOut: "{{ player.so }}",
+                groundBall: "{{ player.gb }}",
+                flyBall: "{{ player.fb }}",
+                walk: "{{ player.w }}",
+                single: "{{ player.s }}",
+                singlePlus: "{{ player.s_plus }}",
+                double: "{{ player.double }}",
+                triple: "{{ player.tr }}",
+                homeRun: "{{ player.hr }}"
+              },
+              {% endfor %}
+            ],
+            pitchersSpot: {{ ns.away_pitchers_spot }},
+            rotation: [
+              {% for player in away_rotation %}
+              {
+                id: "{{ player.id }}",
+                cardYear: "{{ player.card_year }}",
+                cardNo: "{{ player.card_no }}",
+                cardSet: "{{ player.card_set }}",
+                name: "{{ player.name }}",
+                team: "{{ player.team }}",
+                onBase: {{ player.ob_c }},
+                speed: {{ player.speed_ip }},
+                pos: "{{ player.pos }}",
+                hand: "{{ player.hand }}",
+                popUp: "{{ player.pu }}",
+                strikeOut: "{{ player.so }}",
+                groundBall: "{{ player.gb }}",
+                flyBall: "{{ player.fb }}",
+                walk: "{{ player.w }}",
+                single: "{{ player.s }}",
+                singlePlus: "{{ player.s_plus }}",
+                double: "{{ player.double }}",
+                triple: "{{ player.tr }}",
+                homeRun: "{{ player.hr }}"
+              },
+              {% endfor %}
+            ]
+            };
+
+            var homeTeamData = {
+              teamName: "Arizona Diamondbacks",
+              lineup:[
+                {% for player in home_lineup %}
+                {% if player.pos == "Starter" %}{% set ns.home_pitchers_spot = loop.index0 %}{% endif %}
+                {
+                  id: "{{ player.id }}",
+                  cardYear: "{{ player.card_year }}",
+                  cardNo: "{{ player.card_no }}",
+                  cardSet: "{{ player.card_set }}",
+                  name: "{{ player.name }}",
+                  team: "{{ player.team }}",
+                  onBase: {{ player.ob_c }},
+                  speed: {{ player.speed_ip }},
+                  pos: "{{ player.pos }}",
+                  hand: "{{ player.hand }}",
+                  popUp: "{{ player.pu }}",
+                  strikeOut: "{{ player.so }}",
+                  groundBall: "{{ player.gb }}",
+                  flyBall: "{{ player.fb }}",
+                  walk: "{{ player.w }}",
+                  single: "{{ player.s }}",
+                  singlePlus: "{{ player.s_plus }}",
+                  double: "{{ player.double }}",
+                  triple: "{{ player.tr }}",
+                  homeRun: "{{ player.hr }}"
+                },
+                {% endfor %}
+              ],
+              pitchersSpot: {{ ns.away_pitchers_spot }},
+                rotation: [
+                  {% for player in home_rotation %}
+                  {
+                    id: "{{ player.id }}",
+                    cardYear: "{{ player.card_year }}",
+                    cardNo: "{{ player.card_no }}",
+                    cardSet: "{{ player.card_set }}",
+                    name: "{{ player.name }}",
+                    team: "{{ player.team }}",
+                    onBase: {{ player.ob_c }},
+                    speed: {{ player.speed_ip }},
+                    pos: "{{ player.pos }}",
+                    hand: "{{ player.hand }}",
+                    popUp: "{{ player.pu }}",
+                    strikeOut: "{{ player.so }}",
+                    groundBall: "{{ player.gb }}",
+                    flyBall: "{{ player.fb }}",
+                    walk: "{{ player.w }}",
+                    single: "{{ player.s }}",
+                    singlePlus: "{{ player.s_plus }}",
+                    double: "{{ player.double }}",
+                    triple: "{{ player.tr }}",
+                    homeRun: "{{ player.hr }}"
+                  },
+                  {% endfor %}
+                ]
+                };
+
+
+              var playerImage = function (player) {
+                var image_url = "/static/image/card_imgs/" + player.cardYear + "/" + player.cardSet + "/" + player.cardNo + ".jpg";
+                return image_url;
+
+
+            }
+
+          </script>
+          <script type="text/javascript" src="{{ url_for('static', filename='js/javascript.js') }}"></script>
+
+
+
+
+  </body>
+</html>

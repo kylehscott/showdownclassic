@@ -1,0 +1,122 @@
+{% extends "header.html" %}
+
+{% block body %}
+
+<div class="uk-container uk-background-secondary">
+    <div class="uk-flex uk-flex-center uk-flex-wrap uk-padding-large">
+            <form class="uk-width-1-1 uk-padding-remove" action="/cards/query">
+                <fieldset class="uk-fieldset">
+                    <div class="uk-margin uk-light">
+                        <select class="uk-select uk-width-1-2" name="team">
+                            <option value="">Select Team</option>
+                            <option value="Arizona">Arizona</option>
+                            <option value="Atlanta">Atlanta</option>
+                            <option value="Baltimore">Baltimore</option>
+                            <option value="Boston">Boston</option>
+                            <option value="Chicago (A)">Chicago (A)</option>
+                            <option value="Chicago (N)">Chicago (N)</option>
+                            <option value="Cincinnati">Cincinnati</option>
+                            <option value="Cleveland">Cleveland</option>
+                            <option value="Colorado">Colorado</option>
+                            <option value="Detroit">Detroit</option>
+                            <option value="Houston">Houston</option>
+                            <option value="Kansas City">Kansas City</option>
+                            <option value="Los Angeles (A)">Los Angeles (A)</option>
+                            <option value="Los Angeles (N)">Los Angeles (N)</option>
+                            <option value="Miami">Miami</option>
+                            <option value="Milwaukee">Milwaukee</option>
+                            <option value="Minnesota">Minnesota</option>
+                            <option value="New York (A)">New York (A)</option>
+                            <option value="New York (N)">New York (N)</option>
+                            <option value="Oakland">Oakland</option>
+                            <option value="Philadelphia">Philadelphia</option>
+                            <option value="Pittsburgh">Pittsburgh</option>
+                            <option value="San Diego">San Diego</option>
+                            <option value="San Francisco">San Francisco</option>
+                            <option value="Seattle">Seattle</option>
+                            <option value="St. Louis">St. Louis</option>
+                            <option value="Tampa Bay">Tampa Bay</option>
+                            <option value="Texas">Texas</option>
+                            <option value="Toronto">Toronto</option>
+                            <option value="Washington">Washington</option>
+                        </select>
+                        <select class="uk-select uk-width-1-2" name="position">
+                            <option value="">Select Position</option>
+                            <option value="C+">C</option>
+                            <option value="1B+">1B</option>
+                            <option value="2B+">2B</option>
+                            <option value="SS+">SS</option>
+                            <option value="3B+">3B</option>
+                            <option value="LF+">LF</option>
+                            <option value="CF+">CF</option>
+                            <option value="RF+">RF</option>
+                            <option value="DH">DH</option>
+                        </select>
+                    </div>
+                    <div class="uk-margin uk-light uk-width-1-2">
+
+                    </div>
+                    <input class="uk-button uk-button-secondary" type="submit" value="Submit">
+                </fieldset>
+            </form>
+        {% for card in cards %}
+            <div class="uk-width-1-6@s uk-width-1-3 uk-padding-small">
+                <div class="flip-container" ontouchstart="this.classList.toggle('hover');">
+                    <div class="flipper" id="batter-flipper">
+                        <div id="batter" class="front uk-card uk-background-secondary" style="font-size: 13px;">
+                            <img class="batters-img" src="/static/image/card_imgs/{{ card.card_year }}/{{ card.card_set }}/{{ card.card_no }}.jpg">
+                            <div class="uk-overlay uk-position-top-right uk-padding-remove-top uk-padding-remove-right uk-text-right">
+                                <small class="uk-label uk-background-secondary" style="font-size: 10px"><span class="uk-visible@s">OB: {{ card.ob_c }}</span></small><br>
+                                <small class="uk-label uk-background-secondary uk-visible@m" style="font-size: 8px;"><span class="uk-visible@m">SPD: {{ card.speed_ip }}</span></small>
+                            </div>
+                            <div class="card-overlay uk-overlay uk-overlay-primary uk-position-bottom uk-padding-small">
+                                <div class="uk-flex-nowrap">{{ card.name }}<span class="uk-visible@m"> - {{ card.pos.split(",")[0].split("+")[0] }}</span><br></div>
+                                <span class="uk-visible@m" style="font-size: 10px; font-style: italic;"><span id="batter-year">'{{ card.card_year[2:] }}</span> <span>{{ card.team }}</span></span>
+                            </div>
+                        </div>
+                        <div class="back uk-card uk-background-secondary">
+                            <img class="uk-overlay-primary" src="/static/image/card_imgs/{{ card.card_year }}/{{ card.card_set }}/{{ card.card_no }}.jpg" style="opacity: 0.3; filter: blur(5px);">
+                            <div class="uk-overlay uk-position-top uk-margin-remove-top">
+                                <small>{{ card.name }}</small>
+                                <small>{{ card.pos }}</small>
+                            </div>
+                            <div class="uk-overlay uk-position-center stats-back">
+                              <div class="uk-flex uk-flex-column uk-light">
+                                {% if card.so != "-" %}<small>SO:  {{ card.so }}</small>{% endif %}
+                                {% if card.gb != "-" %}<small>GB:  {{ card.gb }}</small>{% endif %}
+                                {% if card.fb != "-" %}<small>FB:  {{ card.fb }}</small>{% endif %}
+                                {% if card.w != "-" %}<small>BB:  {{ card.w }}</small>{% endif %}
+                                {% if card.s != "-" %}<small>1B:  {{ card.s }}</small>{% endif %}
+                                {% if card.s_plus != "-" %}<small>1B+:  {{ card.s_plus }}</small>{% endif %}
+                                {% if card.double != "-" %}<small>2B:  {{ card.double }}</small>{% endif %}
+                                {% if card.tr != "-" %}<small>3B:  {{ card.tr }}</small>{% endif %}
+                                {% if card.hr != "-" %}<small>HR:  {{ card.hr }}</small>{% endif %}
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+        <ul class="uk-pagination uk-flex-center" uk-margin>
+            <li {% if page_no == 1 %}class="uk-disabled"{% endif %}><a href="/cards/?page={{ page_no - 1 }}"><span uk-pagination-previous></span></a></li>
+                {% if page_no <= 3 %}
+                <li {% if page_no == 1 %}class="uk-active"{% endif %}><a href="/cards/?page=1">1</a></li>
+                <li {% if page_no == 2 %}class="uk-active"{% endif %}><a href="/cards/?page=2">2</a></li>
+                <li {% if page_no == 3 %}class="uk-active"{% endif %}><a href="/cards/?page=3">3</a></li>
+                <li><a href="/cards/?page=4">4</a></li>
+                <li><a href="/cards/?page=5">5</a></li>
+                {% else %}
+                <li><a href="/cards/?page={{ page_no - 2 }}">{{ page_no - 2 }}</a></li>
+                <li><a href="/cards/?page={{ page_no - 1 }}">{{ page_no - 1 }}</a></li>
+                <li class="uk-active"><span>{{ page_no }}</span></li>
+                <li><a href="/cards/?page={{ page_no + 1 }}">{{ page_no + 1 }}</a></li>
+                <li><a href="/cards/?page={{ page_no + 2 }}">{{ page_no + 2 }}</a></li>
+                {% endif %}
+            <li><a href="/cards/?page={{ page_no + 1 }}"><span uk-pagination-next></span></a></li>
+        </ul>
+        <br>
+</div>
+
+{% endblock %}
