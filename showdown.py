@@ -1,6 +1,7 @@
 from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+
 from wtforms import Form, BooleanField, TextField, StringField, PasswordField, SubmitField, validators
 from passlib.hash import sha256_crypt
 import gc, os, random, string
@@ -54,9 +55,10 @@ class Cards(db.Model):
     tr = db.Column('TR', db.Unicode)
     hr = db.Column('HR', db.Unicode)
 
-class CardSchema(ma.ModelSchema):
+class CardSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Cards
+        load_instance = True
 
 class Lineups(db.Model):
     __tablename__ = 'lineups'
@@ -81,7 +83,7 @@ class Lineups(db.Model):
         self.user_id = user_id
         self.batters_no_dh = batters_no_dh
 
-class LineupSchema(ma.ModelSchema):
+class LineupSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Lineups
 
